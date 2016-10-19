@@ -11,27 +11,39 @@ import static android.os.SystemClock.sleep;
 
 public class Activity1 extends AppCompatActivity {
 
+    private MyApplication myApplication;
+
     private static final String TAG = "ImageActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_1);
+
+        myApplication = (MyApplication) getApplicationContext();
+        myApplication.activity1 = this;
     }
 
     @Override
     protected void onPostResume() {
         super.onPostResume();
         Log.d(TAG, "onPostResume: !");
-        WaitTask task = new WaitTask(this);
-        task.execute();
+        if (myApplication.waitTask == null) {
+            myApplication.waitTask = new WaitTask(myApplication);
+            myApplication.waitTask.execute();
+        }
     }
 
+    public void onTimer() {
+        Intent intent = new Intent(this, Activity2.class);
+        startActivity(intent);
+        finish();
+    }
 
-    private class WaitTask extends AsyncTask<Void, Void, Void> {
+    public class WaitTask extends AsyncTask<Void, Void, Void> {
 
-        private Context context;
+        private MyApplication context;
 
-        public WaitTask(Context context) {
+        public WaitTask(MyApplication context) {
             this.context = context;
         }
 
@@ -46,9 +58,8 @@ public class Activity1 extends AppCompatActivity {
         @Override
         protected void onPostExecute(Void result) {
             Log.d(TAG, "onPostExecute: !");
-            Intent intent = new Intent(context, Activity2.class);
-            startActivity(intent);
-            finish();
+            context.activity1.onTimer();
+            context.activity1 = null;
         }
     }
 }
