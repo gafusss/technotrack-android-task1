@@ -14,22 +14,24 @@ import android.widget.TextView;
 import static android.os.SystemClock.sleep;
 
 public class Activity2 extends AppCompatActivity {
+    private MyApplication myApplication;
 
     private static final String TAG = "CountActivity";
 
-    private boolean started = false;
-    private int counter = 1;
-
-    CountTask countTask = null;
-
-    Button button = null;
-    TextView textView = null;
+    public Button button = null;
+    public TextView textView = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_2);
         Log.d(TAG, "onCreate: !");
+
+        myApplication = (MyApplication) getApplicationContext();
+        myApplication.activity2 = this;
+
+        button = (Button)findViewById(R.id.button);
+        textView = (TextView)findViewById(R.id.textView);
     }
 
     @Override
@@ -37,97 +39,41 @@ public class Activity2 extends AppCompatActivity {
         super.onPostCreate(savedInstanceState);
         Log.d(TAG, "onPostCreate: !");
 
-        button = (Button)findViewById(R.id.button);
-        textView = (TextView)findViewById(R.id.textView);
-
-        if (started && countTask == null) {
+        if (myApplication.countTask != null) {
             button.setText(R.string.button_stop);
-            countTask = new CountTask(this);
-            countTask.execute();
         } else {
             button.setText(R.string.button_start);
+            if (myApplication.counter == 1000) {
+                textView.setText(R.string.s1000);
+            } else {
+                textView.setText(R.string.s0);
+            }
         }
         
     }
 
-    @Override
-    protected void onPostResume() {
-        super.onPostResume();
-        Log.d(TAG, "onPostResume: !");
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Log.d(TAG, "onStart: !");
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        Log.d(TAG, "onStop: !");
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (countTask != null) {
-            countTask.cancel(true);
-        }
-        Log.d(TAG, "onDestroy: !");
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt("counter", counter);
-        outState.putBoolean("started", started);
-        Log.d(TAG, "onSaveInstanceState: !");
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        Log.d(TAG, "onRestoreInstanceState: !");
-        counter = savedInstanceState.getInt("counter");
-        started = savedInstanceState.getBoolean("started");
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(TAG, "onPause: !");
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        Log.d(TAG, "onResume: !");
-    }
-
     public void onButtonStart(View view) {
         Log.d(TAG, "onButtonStart: !");
-        started = !started;
-        if (started) {
+        if (myApplication.countTask == null) {
             Log.d(TAG, "onButtonStart: start");
             button.setText(getString(R.string.button_stop));
             textView.setText(getString(R.string.s1));
-            countTask = new CountTask(this);
+            myApplication.countTask = new CountTask(myApplication);
             Log.d(TAG, "onButtonStart: created count task");
-            countTask.execute();
+            myApplication.countTask.execute();
             Log.d(TAG, "onButtonStart: executed count task");
         } else {
-            Log.d(TAG, "onButtonStart: stop:" + countTask.cancel(true));
-            counter = 1;
+            Log.d(TAG, "onButtonStart: stop:" + myApplication.countTask.cancel(true));
+            myApplication.countTask = null;
+            myApplication.counter = 1;
             button.setText(getString(R.string.button_start));
             textView.setText(getString(R.string.s0));
         }
     }
 
+    public class CountTask extends AsyncTask<Void, Void, Void> {
 
-    private class CountTask extends AsyncTask<Void, Void, Void> {
-
-        private Context context;
+        private MyApplication myApplication;
 
         private String s[][] = {
                 {
@@ -181,22 +127,22 @@ public class Activity2 extends AppCompatActivity {
 
         //private int counter = 1;
 
-        CountTask(Context context)
+        CountTask(MyApplication myApplication)
         {
             Log.d(TAG, "CountTask: CONSTRUCTORRR");
-            this.context = context;
+            this.myApplication = myApplication;
         }
 
         @Override
         protected Void doInBackground(Void... params) {
             Log.d(TAG, "doInBackground: !");
-            while (counter < 1000) {
+            while (myApplication.counter < 1000) {
                 if (isCancelled()) {
                     return null;
                 }
                 publishProgress();
                 sleep(1000);
-                counter++;
+                myApplication.counter++;
             }
             return null;
         }
@@ -211,6 +157,7 @@ public class Activity2 extends AppCompatActivity {
         protected void onProgressUpdate(Void... values) {
             super.onProgressUpdate(values);
             Log.d(TAG, "onProgressUpdate: !");
+            int counter = myApplication.counter;
             int c = counter % 10;
             int b = (counter / 10) % 10;
             int a = (counter / 100) % 10;
@@ -229,16 +176,16 @@ public class Activity2 extends AppCompatActivity {
             sa = s[2][a];
 
             String text = sa.isEmpty() ? sb.isEmpty() ? sc : sc.isEmpty() ? sb : sb + ' ' + sc : sb.isEmpty() ? sc.isEmpty() ? sa : sa + ' ' + sc : sa + ' '+ sb + ' ' + sc;
-            textView.setText(text);
+            myApplication.activity2.textView.setText(text);
         }
 
         @Override
         protected void onPostExecute(Void result) {
             Log.d(TAG, "onPostExecute: !");
-            textView.setText(R.string.s1000);
-            button.setText(R.string.button_start);
-            started = false;
-            counter = 1;
+            myApplication.activity2.textView.setText(R.string.s1000);
+            myApplication.activity2.button.setText(R.string.button_start);
+            myApplication.counter = 1;
+            myApplication.countTask = null;
         }
     }
 }

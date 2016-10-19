@@ -10,5 +10,7 @@ public class MyApplication extends Application {
     public CountDownTimer countDownTimer = null;
 
     public Activity2 activity2 = null;
+    public Activity2.CountTask countTask = null;
+    public int counter = 1;
 
 }
