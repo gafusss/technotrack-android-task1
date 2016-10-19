@@ -71,7 +71,9 @@ public class Activity2 extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        countTask.cancel(true);
+        if (countTask != null) {
+            countTask.cancel(true);
+        }
         Log.d(TAG, "onDestroy: !");
     }
 
@@ -179,7 +181,7 @@ public class Activity2 extends AppCompatActivity {
 
         //private int counter = 1;
 
-        public CountTask(Context context)
+        CountTask(Context context)
         {
             Log.d(TAG, "CountTask: CONSTRUCTORRR");
             this.context = context;
@@ -213,9 +215,9 @@ public class Activity2 extends AppCompatActivity {
             int b = (counter / 10) % 10;
             int a = (counter / 100) % 10;
 
-            String sc = null;
-            String sb = null;
-            String sa = null;
+            String sc;
+            String sb;
+            String sa;
 
             if (b == 1) {
                 sc = "";
